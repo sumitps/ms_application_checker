@@ -6,22 +6,37 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import propmanager
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 config = propmanager.PropManager(os.getenv('MS_KEY'))
-print(config)
-options = webdriver.ChromeOptions() 
+options = Options() 
 options.add_argument("start-maximized")
-#options.add_argument('--headless')
 options.add_argument('--no-sandbox')
 options.add_argument('--disable-dev-shm-usage')
-driver = uc.Chrome(options=options)
+driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 driver.implicitly_wait(10)
 
-unilist = ['ubs','sbu','ga','osu']
+unilist = ['sbu','ga','osu']
 
 def open_new_tab(url):
     scr = "window.open('"+ url +"', '_blank');"
     driver.execute_script(scr)
+
+def processJob():
+    i=0
+    print('hey')
+    for uni in unilist:
+        url = config.prop(uni + '.url')
+        if(i==0):
+            driver.get(url)
+        else:
+            open_new_tab(url)
+            driver.switch_to.window(driver.window_handles[i])
+        openunipage(uni,i)
+        i+=1
+
 
 def openunipage(uni,i):
     if(uni == 'ncsu'):
@@ -247,17 +262,5 @@ def openunipage(uni,i):
         except NoSuchElementException:
             print('could not login, exiting')
 
-
-def runMain():
-    i=0
-    for uni in unilist:
-        url = config.prop(uni + '.url')
-        if(i==0):
-            driver.get(url)
-        else:
-            open_new_tab(url)
-            driver.switch_to.window(driver.window_handles[i])
-        openunipage(uni,i)
-        i+=1
-
-runMain()
+if __name__ == '__main__':
+    processJob()
